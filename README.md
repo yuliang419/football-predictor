@@ -13,7 +13,7 @@ from 2010-2021 were downloaded from
 [Kaggle](https://www.kaggle.com/quadeer15sh/premier-league-standings-11-seasons-20102021)
 and saved in `data/EPL_Standings.csv`.
 
-To extract useful features from the raw data and rewrite them
+To extract useful features from the two sets of raw data and rewrite them
 in a usable format, run `dataset.py` or see the beginning
 of `dataset_visualize.ipynb`. For each match, the script
 retrieves the last 5 home and away games each team has played

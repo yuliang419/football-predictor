@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from typing import Union
@@ -85,7 +86,7 @@ def get_team_stats(team: str, date: pd.Timestamp, season: str, matches: int = 5)
 
 def get_match_stats(row: pd.Series, matches: int = 5) -> Union[dict, None]:
     """
-    Retrieve stats for both home and away team in each given match. Only home stats are aggregated for the home team,
+    Retrieve stats for both home and away teams in each given match. Only home stats are aggregated for the home team,
     and away stats for the away team.
     :param row: single row from all_matches containing info on one match
     :param matches: number of previous matches to aggregate
@@ -124,6 +125,25 @@ def get_match_stats(row: pd.Series, matches: int = 5) -> Union[dict, None]:
         'AvgHomeShotsConceded': home_results['HomeShotsConceded'],
         'AvgAwayShotsConceded': away_results['AwayShotsConceded']
     }
+
+
+def generate_train_val_sets(processed_data: pd.DataFrame, train_fraction: float = 0.8, random_seed: int = 123) -> \
+        tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Shuffle and split dataset into train and val sets.
+    :param processed_data: dataframe containing all matches, created by running get_match_stats on each row of
+    all_matches
+    :param train_fraction: fraction of entries to put into train split
+    :param random_seed: random seed for shuffling
+    :return: the shuffled train and val splits as two dataframes
+    """
+    np.random.seed(random_seed)
+    n_samples = len(processed_data)
+    shuffled_data = processed_data.iloc[np.random.permutation(n_samples)]
+    train_cutoff = int(train_fraction * n_samples)
+    train = shuffled_data[:train_cutoff]
+    val = shuffled_data[train_cutoff:]
+    return train, val
 
 
 if __name__ == '__main__':
