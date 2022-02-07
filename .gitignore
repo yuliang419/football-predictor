@@ -130,3 +130,5 @@ dmypy.json
 
 # Other
 papers/
+.DS_store
+.idea/
