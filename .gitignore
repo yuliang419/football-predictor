@@ -132,3 +132,4 @@ dmypy.json
 papers/
 .DS_store
 .idea/
+plots/
