@@ -116,7 +116,7 @@ def get_match_stats(row: pd.Series, matches: int = 5) -> Union[dict, None]:
         'AvgHomeGoals': home_results['HomeGoals'],
         'AvgAwayGoals': away_results['AwayGoals'],
         'AvgHomeShots': home_results['HomeShots'],
-        'AvgAwayShots': home_results['AwayShots'],
+        'AvgAwayShots': away_results['AwayShots'],
         'AvgHomeShotsOnTarget': home_results['HomeShotsOnTarget'],
         'AvgAwayShotsOnTarget': away_results['AwayShotsOnTarget'],
         'AvgHomeCorners': home_results['HomeCorners'],
