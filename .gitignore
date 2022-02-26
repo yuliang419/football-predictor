@@ -133,3 +133,4 @@ papers/
 .DS_store
 .idea/
 plots/
+*.png
