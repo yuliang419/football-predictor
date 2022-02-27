@@ -151,16 +151,18 @@ def generate_train_val_test_sets(processed_data: pd.DataFrame, train_fraction: f
     train = shuffled_data[:train_cutoff]
     val = shuffled_data[train_cutoff:]
 
-    X_train = train.drop(columns=['Season', 'Date', 'HomeTeam', 'AwayTeam', 'HomeGoals', 'AwayGoals'])
+    drop_cols = ['Season', 'Date', 'HomeTeam', 'AwayTeam', 'HomeGoals', 'AwayGoals', 'AvgHomeCorners', 'AvgAwayCorners']
+
+    X_train = train.drop(columns=drop_cols)
     y_train = X_train.pop('FTR')
     label_binarizer = LabelBinarizer()
     y_train = label_binarizer.fit_transform(y_train)
 
-    X_val = val.drop(columns=['Season', 'Date', 'HomeTeam', 'AwayTeam', 'HomeGoals', 'AwayGoals'])
+    X_val = val.drop(columns=drop_cols)
     y_val = X_val.pop('FTR')
     y_val = label_binarizer.transform(y_val)
 
-    X_test = test.drop(columns=['Season', 'Date', 'HomeTeam', 'AwayTeam', 'HomeGoals', 'AwayGoals'])
+    X_test = test.drop(columns=drop_cols)
     y_test = X_test.pop('FTR')
     y_test = label_binarizer.transform(y_test)
 
