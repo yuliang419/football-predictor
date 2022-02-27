@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelBinarizer
 from tqdm import tqdm
 from typing import Union
 
@@ -129,22 +129,18 @@ def get_match_stats(row: pd.Series, matches: int = 5) -> Union[dict, None]:
 
 
 def generate_train_val_test_sets(processed_data: pd.DataFrame, train_fraction: float = 0.8, random_seed: int = 123) -> \
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        tuple[pd.DataFrame, np.ndarray, pd.DataFrame, np.ndarray, pd.DataFrame, np.ndarray]:
     """
-    Shuffle and split dataset into train, validation and test sets. Normalize feature columns using StandardScaler.
+    Shuffle and split dataset into train, validation and test sets. One-hot encode the FTR column.
     The last available season is always used as the test set.
     :param processed_data: dataframe containing all matches, created by running get_match_stats on each row of
     all_matches
     :param train_fraction: fraction of entries (after removing test split) to put into train split
     :param random_seed: random seed for shuffling
-    :return: the shuffled and normalized train and val splits, and test split
+    :return: the shuffled train and val splits, and test split (features and labels for each)
     """
-    feature_cols = ['StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals',
-                                 'AvgAwayGoals', 'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget',
-                                 'AvgAwayShotsOnTarget', 'AvgHomeCorners', 'AvgAwayCorners', 'AvgHomeGoalsConceded',
-                                 'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded']
     last_season = processed_data['Season'].values[-1]
-    test = processed_data[processed_data['Season'] == last_season].copy()
+    test = processed_data[processed_data['Season'] == last_season]
     train_val = processed_data[processed_data['Season'] != last_season]
 
     # Shuffle train and val sets
@@ -152,16 +148,25 @@ def generate_train_val_test_sets(processed_data: pd.DataFrame, train_fraction: f
     n_samples = len(train_val)
     shuffled_data = train_val.iloc[np.random.permutation(n_samples)]
     train_cutoff = int(train_fraction * n_samples)
-    train = shuffled_data[:train_cutoff].copy()
-    val = shuffled_data[train_cutoff:].copy()
+    train = shuffled_data[:train_cutoff]
+    val = shuffled_data[train_cutoff:]
 
-    # Normalize features using train set
-    scaler = StandardScaler()
-    train.loc[:, feature_cols] = scaler.fit_transform(train[feature_cols])
-    val.loc[:, feature_cols] = scaler.transform(val[feature_cols])
-    test.loc[:, feature_cols] = scaler.transform(test[feature_cols])
+    drop_cols = ['Season', 'Date', 'HomeTeam', 'AwayTeam', 'HomeGoals', 'AwayGoals', 'AvgHomeCorners', 'AvgAwayCorners']
 
-    return train, val, test
+    X_train = train.drop(columns=drop_cols)
+    y_train = X_train.pop('FTR')
+    label_binarizer = LabelBinarizer()
+    y_train = label_binarizer.fit_transform(y_train)
+
+    X_val = val.drop(columns=drop_cols)
+    y_val = X_val.pop('FTR')
+    y_val = label_binarizer.transform(y_val)
+
+    X_test = test.drop(columns=drop_cols)
+    y_test = X_test.pop('FTR')
+    y_test = label_binarizer.transform(y_test)
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
 
 
 if __name__ == '__main__':

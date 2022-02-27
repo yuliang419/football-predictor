@@ -133,3 +133,5 @@ papers/
 .DS_store
 .idea/
 plots/
+*.png
+tune_model.ipynb
