@@ -1,12 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pandas as pd
 import tensorflow as tf
 
 
 class Predictor:
-    def __init__(self, X_train: pd.DataFrame, y_train: np.ndarray, X_val: pd.DataFrame, y_val: np.ndarray):
+    def __init__(self):
+        self.model = None
+        self.is_trained = False
+        self.X_train = None
+        self.y_train = None
+        self.X_val = None
+        self.y_val = None
+
+    def load_train_val(self, X_train: pd.DataFrame, y_train: np.ndarray, X_val: pd.DataFrame, y_val: np.ndarray):
         """
         Initialize predictor with training and validation data
         :param X_train: predictors from train set as dataframe
@@ -18,8 +25,6 @@ class Predictor:
         self.y_train = y_train
         self.X_val = X_val
         self.y_val = y_val
-        self.model = None
-        self.is_trained = False
 
     def get_model(self, random_seed: int = 123) -> tf.keras.Sequential:
         """
@@ -28,7 +33,7 @@ class Predictor:
         """
         tf.random.set_seed(random_seed)
 
-        norm_layer = tf.keras.layers.experimental.preprocessing.Normalization()
+        norm_layer = tf.keras.layers.Normalization()
         norm_layer.adapt(self.X_train)
 
         input_size = self.X_train.shape[1]
@@ -46,12 +51,12 @@ class Predictor:
 
         self.model.compile(optimizer=sgd, loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
-    def train(self, plot: bool = False, save_model: bool = False, model_dir: str = 'model/'):
+    def train(self, plot: bool = False, save_model: bool = False, model_name: str = 'model'):
         """
         Train model with given train and val data. Optionally plot metrics and/or save trained model.
         :param plot: if True, show plot of train/val losses and accuracies.
-        :param save_model:
-        :param model_dir:
+        :param save_model: If true, save trained model
+        :param model_name: Name of the saved model
         :return:
         """
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0,
@@ -69,10 +74,8 @@ class Predictor:
             plt.show()
 
         if save_model:
-            if not os.path.isdir(model_dir):
-                os.mkdir(model_dir)
-            self.model.save(os.path.join(model_dir, 'model.keras'))
-            print(f'Model saved in {model_dir}')
+            self.model.save(model_name)
+            print(f'Model saved in {model_name}')
 
     def evaluate(self, X_test: pd.DataFrame, y_test: np.ndarray) -> tuple[float, float]:
         """
@@ -85,7 +88,31 @@ class Predictor:
         loss, accuracy = self.model.evaluate(X_test, y_test, batch_size=32)
         return loss, accuracy
 
-    def predict(self):
-        # still working on thiss
+    def load_saved_model(self, model_path: str):
+        """
+        Load a saved model.
+        :param model_path: path to trained model
+        :return:
+        """
+        self.model = tf.keras.models.load_model(model_path)
+        self.is_trained = True
+
+    def predict(self, sample: pd.Series):
+        """
+        Use a trained model to make a prediction on a new sample.
+        :param sample: single row from a pd DataFrame on which to perform the prediction. Must be in the same format as
+        samples from the test set. The following columns are required:
+            'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals', 'AvgAwayGoals',
+            'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget', 'AvgAwayShotsOnTarget', 'AvgHomeGoalsConceded',
+            'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded'
+        :return:
+        """
         assert self.is_trained, 'Model has not yet been trained. Train model before predicting.'
-        pass
+        required_cols = {'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals',
+                         'AvgAwayGoals', 'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget', 'AvgAwayShotsOnTarget',
+                         'AvgHomeGoalsConceded', 'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded'}
+
+        assert required_cols.issubset(sample.columns), 'Sample must have the following required features: ' + \
+                                                       ', '.join(required_cols)
+
+        return self.model.predict(sample[required_cols])

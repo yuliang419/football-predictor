@@ -134,4 +134,3 @@ papers/
 .idea/
 plots/
 *.png
-tune_model.ipynb
