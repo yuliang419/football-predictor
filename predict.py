@@ -97,15 +97,15 @@ class Predictor:
         self.model = tf.keras.models.load_model(model_path)
         self.is_trained = True
 
-    def predict(self, sample: pd.Series):
+    def predict(self, sample: pd.DataFrame) -> pd.DataFrame:
         """
         Use a trained model to make a prediction on a new sample.
-        :param sample: single row from a pd DataFrame on which to perform the prediction. Must be in the same format as
-        samples from the test set. The following columns are required:
+        :param sample: one or more samples in a pandas DataFrame on which to perform the prediction. Must be in the same
+        format as samples from the test set. The following columns are required:
             'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals', 'AvgAwayGoals',
             'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget', 'AvgAwayShotsOnTarget', 'AvgHomeGoalsConceded',
             'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded'
-        :return:
+        :return: predicted probabilities as dataframe
         """
         assert self.is_trained, 'Model has not yet been trained. Train model before predicting.'
         required_cols = {'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals',
@@ -115,4 +115,5 @@ class Predictor:
         assert required_cols.issubset(sample.columns), 'Sample must have the following required features: ' + \
                                                        ', '.join(required_cols)
 
-        return self.model.predict(sample[required_cols])
+        results = self.model.predict(sample[required_cols])
+        return pd.DataFrame(results, columns=['A', 'D', 'H'])

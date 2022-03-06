@@ -155,6 +155,7 @@ def generate_train_val_test_sets(processed_data: pd.DataFrame, train_fraction: f
 
     X_train = train.drop(columns=drop_cols)
     y_train = X_train.pop('FTR')
+    # A=[1,0,0], D=[0,1,0], H=[0,0,1]
     label_binarizer = LabelBinarizer()
     y_train = label_binarizer.fit_transform(y_train)
 
