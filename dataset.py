@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelBinarizer
 from tqdm import tqdm
 from typing import Union
 
 standings = pd.read_csv('data/EPL_Standings.csv')
 all_matches = pd.read_csv('data/EPL_results_all.csv')
 all_matches['Date'] = pd.to_datetime(all_matches['Date'], dayfirst=True)
+label_map = {'H': [1, 0, 0], 'D': [0, 1, 0], 'A': [0, 0, 1]}
 
 
 def aggregate_matches(home: bool, team: str, date: pd.Timestamp, matches: int = 5) -> pd.Series:
@@ -155,19 +155,27 @@ def generate_train_val_test_sets(processed_data: pd.DataFrame, train_fraction: f
 
     X_train = train.drop(columns=drop_cols)
     y_train = X_train.pop('FTR')
-    # A=[1,0,0], D=[0,1,0], H=[0,0,1]
-    label_binarizer = LabelBinarizer()
-    y_train = label_binarizer.fit_transform(y_train)
+    y_train = label_binarizer(y_train)
 
     X_val = val.drop(columns=drop_cols)
     y_val = X_val.pop('FTR')
-    y_val = label_binarizer.transform(y_val)
+    y_val = label_binarizer(y_val)
 
     X_test = test.drop(columns=drop_cols)
     y_test = X_test.pop('FTR')
-    y_test = label_binarizer.transform(y_test)
+    y_test = label_binarizer(y_test)
 
     return X_train, y_train, X_val, y_val, X_test, y_test
+
+
+def label_binarizer(labels: pd.Series):
+    """
+    One-hot encode labels for prediction.
+    :param labels: full time results H/D/A.
+    :return: array of one-hot encoded labels. H=[1,0,0], D=[0,1,0], A=[0,0,1]
+    """
+    one_hot = [label_map[label] for label in labels.values]
+    return np.array(one_hot)
 
 
 if __name__ == '__main__':

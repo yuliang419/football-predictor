@@ -116,4 +116,4 @@ class Predictor:
                                                        ', '.join(required_cols)
 
         results = self.model.predict(sample[required_cols])
-        return pd.DataFrame(results, columns=['A', 'D', 'H'])
+        return pd.DataFrame(results, columns=['H', 'D', 'A'])
