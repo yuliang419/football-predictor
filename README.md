@@ -33,8 +33,6 @@ Here are the available columns to use as features in training:
 'AvgAwayShots': away team's average # of shots in the last 5 away matches 
 'AvgHomeShotsOnTarget': home team's average # of shots on target in the last 5 home matches 
 'AvgAwayShotsOnTarget': away team's average # of shots on target in the last 5 away matches
-'AvgHomeCorners': home team's average # of corners in the last 5 home matches 
-'AvgAwayCorners': away team's average # of corners in the last 5 away matches 
 'AvgHomeGoalsConceded': home team's average # of goals conceded in the last 5 home matches 
 'AvgAwayGoalsConceded': away team's average # of goals conceded in the last 5 away matches 
 'AvgHomeShotsConceded': home team's average # of shots on target in the last 5 home matches 
@@ -44,3 +42,14 @@ Among the remaining columns, `HomeGoals` and `AwayGoals` show
 the number of goals scored by the home and away teams in 
 the given match, and `FTR` is the final result (home win `H`,
 draw `D` or away win `A`).
+
+The average numbers of corners taken by each team in the last 5 home and away matches 
+are also available in the dataset, but have been excluded from the model because 
+experimentation shows that these features do not improve the model's performance.
+
+## Model training
+Before training the model, we need to split the dataset into train, validation and test 
+sets using `dataset.generate_train_val_test_sets`. The last available season is 
+always set aside as the test set, and the preceding seasons are shuffled and split 
+into train and validation sets (by default 80% train and 20% validation).
+
