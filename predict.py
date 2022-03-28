@@ -97,7 +97,7 @@ class Predictor:
         self.model = tf.keras.models.load_model(model_path)
         self.is_trained = True
 
-    def predict(self, sample: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, sample: pd.DataFrame):
         """
         Use a trained model to make a prediction on a new sample.
         :param sample: one or more samples in a pandas DataFrame on which to perform the prediction. Must be in the same
@@ -105,15 +105,14 @@ class Predictor:
             'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals', 'AvgAwayGoals',
             'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget', 'AvgAwayShotsOnTarget', 'AvgHomeGoalsConceded',
             'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded'
-        :return: predicted probabilities as dataframe
         """
         assert self.is_trained, 'Model has not yet been trained. Train model before predicting.'
-        required_cols = {'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals',
+        required_cols = ['StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals',
                          'AvgAwayGoals', 'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget', 'AvgAwayShotsOnTarget',
-                         'AvgHomeGoalsConceded', 'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded'}
+                         'AvgHomeGoalsConceded', 'AvgAwayGoalsConceded', 'AvgHomeShotsConceded', 'AvgAwayShotsConceded']
 
-        assert required_cols.issubset(sample.columns), 'Sample must have the following required features: ' + \
-                                                       ', '.join(required_cols)
+        assert set(required_cols).issubset(sample.columns), 'Sample must have the following required features: ' + \
+                                                            ', '.join(required_cols)
 
-        results = self.model.predict(sample[required_cols])
-        return pd.DataFrame(results, columns=['H', 'D', 'A'])
+        results = self.model.predict(sample[required_cols].apply(pd.to_numeric))[0]
+        print('Predicted outcome: %.4f home win - %.4f draw - %.4f away win' % (results[0], results[1], results[2]))
