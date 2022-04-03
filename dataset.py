@@ -1,11 +1,9 @@
+import argparse
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from typing import Union
 
-standings = pd.read_csv('data/EPL_Standings.csv')
-all_matches = pd.read_csv('data/EPL_results_all.csv')
-all_matches['Date'] = pd.to_datetime(all_matches['Date'], dayfirst=True)
 label_map = {'H': [1, 0, 0], 'D': [0, 1, 0], 'A': [0, 0, 1]}
 
 
@@ -43,11 +41,12 @@ def aggregate_matches(home: bool, team: str, date: pd.Timestamp, matches: int = 
     return aggregated_results
 
 
-def get_team_stats(team: str, date: pd.Timestamp, season: str, matches: int = 5) -> dict:
+def get_team_stats(team: str, date: pd.Timestamp, standings: pd.DataFrame, season: str, matches: int = 5) -> dict:
     """
     Retrieve stats for a given team on a given date and organize into dict.
     :param team: name of team
     :param date: retrieve stats before this date
+    :param standings: dataframe containing historical standings of teams at the end of each season
     :param season: current season (should match the date parameter), e.g. 2020-21
     :param matches: number of matches to aggregate
     :return:
@@ -85,17 +84,19 @@ def get_team_stats(team: str, date: pd.Timestamp, season: str, matches: int = 5)
     }
 
 
-def get_match_stats(row: pd.Series, matches: int = 5) -> Union[dict, None]:
+def get_match_stats(row: pd.Series, standings: pd.DataFrame, matches: int = 5) -> \
+        Union[dict, None]:
     """
     Retrieve stats for both home and away teams in each given match. Only home stats are aggregated for the home team,
     and away stats for the away team.
     :param row: single row from all_matches containing info on one match
+    :param standings: dataframe containing historical standings of teams at the end of each season
     :param matches: number of previous matches to aggregate
     :return: dict containing aggregated stats for home and away teams, or None if one team is missing data
     """
     date, season, home, away = row['Date'], row['Season'], row['HomeTeam'], row['AwayTeam']
-    home_results = get_team_stats(home, date, season, matches)
-    away_results = get_team_stats(away, date, season, matches)
+    home_results = get_team_stats(home, date, standings, season, matches)
+    away_results = get_team_stats(away, date, standings, season, matches)
 
     if pd.isnull(home_results['HomeGoals']) or pd.isnull(away_results['AwayGoals']):
         return
@@ -179,6 +180,21 @@ def label_binarizer(labels: pd.Series):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Input paths to data files.')
+    parser.add_argument('--standings', type=str, default='data/EPL_Standings.csv',
+                        help='path to CSV file containing historical standings')
+    parser.add_argument('--raw-data', type=str, default='data/EPL_results_all.csv',
+                        help='path to CSV file containing raw match results')
+    parser.add_argument('--save-to', type=str, default='data/EPL_processed_results.csv',
+                        help='path to save CSV file containing processed data')
+    parser.add_argument('--save', type=bool, default=True, help='save processed data?')
+
+    args = parser.parse_args()
+
+    all_matches = pd.read_csv(args.raw_data)
+    all_matches['Date'] = pd.to_datetime(all_matches['Date'], dayfirst=True)
+    standings = pd.read_csv(args.standings)
+
     data = pd.DataFrame(columns=['Season', 'Date', 'HomeTeam', 'AwayTeam', 'FTR', 'HomeGoals', 'AwayGoals',
                                  'StandingDiff', 'HomeWins', 'AwayWins', 'HomeDraws', 'AwayDraws', 'AvgHomeGoals',
                                  'AvgAwayGoals', 'AvgHomeShots', 'AvgAwayShots', 'AvgHomeShotsOnTarget',
@@ -187,11 +203,12 @@ if __name__ == '__main__':
     skipped = 0
 
     for ind, row in tqdm(all_matches.iterrows(), total=all_matches.shape[0]):
-        match_stats = get_match_stats(row, 5)
+        match_stats = get_match_stats(row, standings, 5)
         if match_stats is not None:
             data = data.append([match_stats], ignore_index=True)
         else:
             skipped += 1
 
     print('%d matches skipped due to insufficient data. %d valid matches loaded' % (skipped, len(data)))
-    data.to_csv('data/EPL_processed_results.csv')
+    if args.save:
+        data.to_csv(args.save_to)

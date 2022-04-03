@@ -11,11 +11,19 @@ All match results from the 2011-12 to 2021-22 seasons are
 saved in `data/EPL_results_all.csv`. Premier League standings 
 from 2010-2021 were downloaded from 
 [Kaggle](https://www.kaggle.com/quadeer15sh/premier-league-standings-11-seasons-20102021)
-and saved in `data/EPL_Standings.csv`.
+and saved in `data/EPL_Standings.csv`. You can substitute your own data files as long
+as they are in the same format as the ones provided.
 
 To extract useful features from the two sets of raw data and rewrite them
-in a usable format, run `dataset.py` or see the beginning
-of `dataset_visualize.ipynb`. For each match, the script
+in a usable format, run `dataset.py` using the following command:
+```commandline
+python dataset.py --standings [path to PL standings file] --raw-data [path to all match results]
+--save [True or False] --save-to [path to save output]
+```
+Or see the beginning
+of `dataset_visualize.ipynb`. 
+
+For each match, the script
 retrieves the last 5 home and away games each team has played
 and averages certain statistics to use as features. The 
 results are then saved in `data/EPL_processed_results.csv`.
