@@ -66,6 +66,7 @@ You can find a demonstration of the training steps in the notebook `train_model.
 
 The model is a multiclass classifier and has the following architecture:
 ![Model architecture](model.png)
+
 The output is three numbers corresponding to the probabilities of a home win, draw,
 and away win respectively.
 You can train a new model from scratch following the steps in 
