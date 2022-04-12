@@ -5,6 +5,14 @@ This project uses a neural network to predict the outcomes of
 English Premier League football matches based on each team's 
 recent performance.
 
+## Environment setup
+Install [Anaconda](https://www.anaconda.com), create an environment with the 
+required packages and activate the environment using the following commands:
+```commandline
+conda env create -f environment.yml
+conda activate football-predictor
+```
+
 ## Dataset preparation
 The raw data were downloaded from http://www.football-data.co.uk.
 All match results from the 2011-12 to 2021-22 seasons are
