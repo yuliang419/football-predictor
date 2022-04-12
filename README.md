@@ -55,9 +55,36 @@ The average numbers of corners taken by each team in the last 5 home and away ma
 are also available in the dataset, but have been excluded from the model because 
 experimentation shows that these features do not improve the model's performance.
 
-## Model training
 Before training the model, we need to split the dataset into train, validation and test 
 sets using `dataset.generate_train_val_test_sets`. The last available season is 
 always set aside as the test set, and the preceding seasons are shuffled and split 
 into train and validation sets (by default 80% train and 20% validation).
 
+## Model training
+All functionalities related to training and predictions are found in `predict.py`.
+You can find a demonstration of the training steps in the notebook `train_model.ipynb`.
+
+The model is a multiclass classifier and has the following architecture:
+![Model architecture](model.png)
+The output is three numbers corresponding to the probabilities of a home win, draw,
+and away win respectively.
+You can train a new model from scratch following the steps in 
+`train_model.ipynb` or load a saved model with `Predictor.load_saved_model`.
+If a new model is trained, `Predictor.train_model` will train the model 
+for a maximum of 100 epochs, with early stopping if the validation loss stops decreasing.
+
+## Evaluating on the test set and predicting on new data
+These two steps are shown in the notebook `evaluate_and_predict.ipynb`.
+
+To evaluate a trained model on a test set, initialize a `Predictor` object and 
+call the following function after training or loading the model:
+
+```python
+loss, acc = predictor.evaluate(X_test, y_test)
+```
+which returns the test loss and accuracy.
+
+To make a prediction on a single sample, the sample must be in pandas dataframe format 
+and have the same columns as the train/val/test data (see [Dataset preparation](#dataset-preparation) for a 
+list of required columns). `Predict.predict` returns the predicted 
+win/draw/loss probabilities for the given match.
